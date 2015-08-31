@@ -1,0 +1,106 @@
+//epoll模型的定义
+#include <stdlib.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+
+int EpollMode();
+
+int main()
+{
+
+}
+
+int EpollMode()
+{
+	while (1)
+	{
+		int nEpollHandle = 0;
+		struct epoll_event *pEpollEvent = NULL;
+		int nMaxEventNumber = 0;
+		int nEventNumber = 0;
+
+		//此处必须有新的变化才返回
+		if ((nEventNumber = epoll_wait(nEpollHandle, pEpollEvent, nMaxEventNumber, -1)) <= 0)
+		{
+			continue;
+		}
+
+		//有新的数据变化
+		int fd;
+		struct epoll_event event;
+		for (int i = 0; i < nEventNumber; i++)
+		{
+			event = pEpollEvent[i];
+			fd = event.data.fd;
+
+			//读取数据
+			if (event.events & EPOLLIN)
+			{
+				//节点查找实现 可否在保存的时候以树的形式保存
+				SocketNode *pSocketNode = GetSocketNode(fd);
+				if (pSocketNode)
+				{
+					int nRecvLength = 0;
+					nRecvLength = recv(fd, pSocketNode->pDataBuffer, pSocketNode->nBuffLength, 0);
+					if (nRecvLength > 0)
+					{
+						LockQueue((&data.recvDataList));
+						Insert(&data.recvDataList, pDataNode, 0);
+						UnlockQueue((&data.recvDataList));
+					}
+					else if (nRecvLength == -1)
+					{
+						ERROR_CODEDESC("EpollMode", errno);
+					}
+					else if (nRecvLength == 0)
+					{
+						//对方关闭了套接字
+					}
+				}
+				else
+				{
+					//断开了连接
+				}
+			}
+			//写数据
+			else if (event.events & EPOLLOUT)
+			{
+				SocketNode *pSocketNode = (SocketNode *)event.data.ptr;
+
+				if (pSocketNode && pSocketNode->pDataBuffer)
+				{
+					int nSendLength = 0;
+					nSendLength = send(fd, pSocketNode->pDataBuffer, pSocketNode->nRealBuffLength, 0);
+					if (nSendLength == -1)
+					{
+						ERROR_CODEDESC("EpollMode", errno);
+					}
+				}
+			}
+			//读取紧急数据
+			else if (event.events & EPOLLPRI)
+			{
+
+			}
+			//发生错误
+			else if (event.events & EPOLLERR)
+			{
+
+			}
+			else
+			{
+
+			}
+		}
+
+	}
+}
+
+struct epoll_event GetEpollEvent(int fd, int events, void *pData)
+{
+	struct epoll_event event;
+	event.events = event;
+	event.dat.fd = fd;
+	event.data.ptr = pData;
+}
+
