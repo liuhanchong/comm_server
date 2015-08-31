@@ -1,0 +1,87 @@
+void TestDB()
+{
+	Ini ini;
+	if (InitIni(&ini, (CHAR *)"/Users/liuhanchong/Documents/workspace/comm_server/ini/db.ini", 200) != 1)
+	{
+		ERROR_DESC("OpenDB", ERR_RDINI);
+		return;
+	}
+
+	CHAR *pHost = malloc(ini.nRowMaxLength);
+	CHAR *pUser = malloc(ini.nRowMaxLength);
+	CHAR *pPasswd = malloc(ini.nRowMaxLength);
+	CHAR *pDB = malloc(ini.nRowMaxLength);
+	CHAR *pUnixSocket = malloc(ini.nRowMaxLength);
+	if (!pHost || !pUser || !pUnixSocket || !pPasswd || !pDB)
+	{
+		free(pHost);
+		pHost = NULL;
+
+		free(pUser);
+		pUser = NULL;
+
+		free(pPasswd);
+		pPasswd = NULL;
+
+		free(pDB);
+		pDB = NULL;
+
+		free(pUnixSocket);
+		pUnixSocket = NULL;
+
+		ReleaseIni(&ini);
+
+		ERROR_DESC("OpenDB", ERR_MALLOC);
+		return;
+	}
+
+	strcpy(pHost, GetString(&ini, "MYSQLDB", "Host", "127.0.0.1"));
+	strcpy(pUser, GetString(&ini, "MYSQLDB", "User", "root"));
+	strcpy(pPasswd, GetString(&ini, "MYSQLDB", "Passwd", ""));
+	strcpy(pDB, GetString(&ini, "MYSQLDB", "DB", "test"));
+	strcpy(pUnixSocket, GetString(&ini, "MYSQLDB", "UnixSocket", ""));
+	unsigned long lClientFlag = GetInt(&ini, "MYSQLDB", "ClientFlag", 0);
+	unsigned int nPort = GetInt(&ini, "MYSQLDB", "Port", 3306);
+
+	ReleaseIni(&ini);
+
+	MYSQL *pMySql = OpenDB(pHost, pUser, pPasswd, pDB, pUnixSocket, lClientFlag, nPort);
+	free(pHost);
+	pHost = NULL;
+
+	free(pUser);
+	pUser = NULL;
+
+	free(pPasswd);
+	pPasswd = NULL;
+
+	free(pDB);
+	pDB = NULL;
+
+	free(pUnixSocket);
+	pUnixSocket = NULL;
+	if (!pMySql)
+	{
+		return;
+	}
+
+	char *pSql = "select * from test_table";
+
+	BeginTraveRecordResult(pMySql, pSql);
+		printf("%s ", GetStringValue(pResult, "name"));
+		printf("%d ", GetIntValue(pResult, "age"));
+		printf("%f ", GetDoubleValue(pResult, "money"));
+		printf("%f ", GetFloatValue(pResult, "money"));
+		printf("%s -OK\n", GetStringValue(pResult, "date"));
+	EndTraveRecordResult();
+
+	pSql = "update test_table set name = 'liuhanchong_bak_bak' where id = 1";
+	ExecuteModify(pMySql, pSql);
+
+	char *pText[2] = {"update test_table set name = 'liuhanchong' where id = 1",
+			"update test_table set name = 'liuhanchong_bak' where id = 2"};
+	ExecuteModifyEx(pMySql, pText, 2);
+//	printf("%ld\n", GetAffectRow(pMySql));
+
+	CloseDB(pMySql);
+}

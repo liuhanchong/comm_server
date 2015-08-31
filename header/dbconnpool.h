@@ -44,6 +44,6 @@ void ReleaseDBConnNode(DBConnNode *pNode);/*释放连接池节点*/
 /*私有*/
 void *FreeDBConn_Acc(void *pData);/*未访问超时连接*/
 int CreateMulDBConn(int nNumber);
-int InsertDBConn();
+int InsertDBConn(CHAR *pHost, CHAR *pUser, CHAR *pPasswd, CHAR *pDB, CHAR *pUnixSocket, unsigned long lClientFlag, unsigned int nPort);
 
 #endif /* HEADER_DBCONNPOOL_H_ */

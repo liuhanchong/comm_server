@@ -133,17 +133,113 @@ void *FreeDBConn_Acc(void *pData)
 
 int CreateMulDBConn(int nNumber)
 {
+	Ini ini;
+	if (InitIni(&ini, (CHAR *)"/Users/liuhanchong/Documents/workspace/comm_server/ini/db.ini", 200) != 1)
+	{
+		ERROR_DESC("CreateMulDBConn", ERR_RDINI);
+		return 0;
+	}
+
+	CHAR *pHost = malloc(ini.nRowMaxLength);
+	CHAR *pUser = malloc(ini.nRowMaxLength);
+	CHAR *pPasswd = malloc(ini.nRowMaxLength);
+	CHAR *pDB = malloc(ini.nRowMaxLength);
+	CHAR *pUnixSocket = malloc(ini.nRowMaxLength);
+	if (!pHost || !pUser || !pUnixSocket || !pPasswd || !pDB)
+	{
+		free(pHost);
+		pHost = NULL;
+
+		free(pUser);
+		pUser = NULL;
+
+		free(pPasswd);
+		pPasswd = NULL;
+
+		free(pDB);
+		pDB = NULL;
+
+		free(pUnixSocket);
+		pUnixSocket = NULL;
+
+		ReleaseIni(&ini);
+
+		ERROR_DESC("CreateMulDBConn", ERR_MALLOC);
+		return 0;
+	}
+
+	strcpy(pHost, GetString(&ini, "MYSQLDB", "Host", "127.0.0.1"));
+	strcpy(pUser, GetString(&ini, "MYSQLDB", "User", "root"));
+	strcpy(pPasswd, GetString(&ini, "MYSQLDB", "Passwd", ""));
+	strcpy(pDB, GetString(&ini, "MYSQLDB", "DB", "test"));
+	strcpy(pUnixSocket, GetString(&ini, "MYSQLDB", "UnixSocket", ""));
+	unsigned long lClientFlag = GetInt(&ini, "MYSQLDB", "ClientFlag", 0);
+	unsigned int nPort = GetInt(&ini, "MYSQLDB", "Port", 3306);
+
+	ReleaseIni(&ini);
+
 	while ((nNumber--) > 0)
 	{
-		if (InsertDBConn() == 0)
+		if (InsertDBConn(pHost, pUser, pPasswd, pDB, pUnixSocket, lClientFlag, nPort) == 0)
 		{
 			ERROR_DESC("CreateMulDBConn", ERR_CRETHREAD);
 		}
 	}
+
+	free(pHost);
+	pHost = NULL;
+
+	free(pUser);
+	pUser = NULL;
+
+	free(pPasswd);
+	pPasswd = NULL;
+
+	free(pDB);
+	pDB = NULL;
+
+	free(pUnixSocket);
+	pUnixSocket = NULL;
+
 	return 1;
 }
 
-int InsertDBConn()
+int InsertDBConn(CHAR *pHost, CHAR *pUser, CHAR *pPasswd, CHAR *pDB, CHAR *pUnixSocket, unsigned long lClientFlag, unsigned int nPort)
 {
+	if (GetCurQueueLen(&connPool.dbConnList) >= GetMaxQueueLen(&connPool.dbConnList))
+	{
+		ERROR_DESC("InsertDBConn", ERR_OUTMAXLEN);
+		return 0;
+	}
+
+	DBConnNode *pTmp = (DBConnNode *)malloc(sizeof(DBConnNode));
+	if (!pTmp)
+	{
+		ERROR_DESC("InsertDBConn", ERR_MALLOC);
+		return 0;
+	}
+
+	MYSQL *pMySql = OpenDB(pHost, pUser, pPasswd, pDB, pUnixSocket, lClientFlag, nPort);
+	if (!pMySql)
+	{
+		free(pTmp);
+		pTmp = NULL;
+		ERROR_DESC("InsertDBConn", ERR_DBOPEN);
+		return 0;
+	}
+
+	pTmp->pMySql = pMySql;
+	pTmp->tmAccessTime = time(NULL);
+	pTmp->nConnection = 0;
+
+	int nRet = Insert(&connPool.dbConnList, (void *)pTmp, 0);
+	if (!nRet)
+	{
+		ReleaseDBConnNode(pTmp);
+		pTmp = NULL;
+		ERROR_DESC("InsertDBConn", ERR_INSELE);
+		return 0;
+	}
+
 	return 1;
 }
