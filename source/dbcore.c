@@ -63,13 +63,13 @@ int ExecuteModify(MYSQL *pMySql, char *sSql)
 
 	if (mysql_query(pMySql, sSql) != 0)
 	{
-		ERROR_DESC("ExecuteModify", mysql_error(pMySql));
+		ERROR_DESC("ExecuteModify-1", mysql_error(pMySql));
 		return 0;
 	}
 
 	if (mysql_commit(pMySql) != 0)
 	{
-		ERROR_DESC("ExecuteModify", mysql_error(pMySql));
+		ERROR_DESC("ExecuteModify-2", mysql_error(pMySql));
 		return 0;
 	}
 

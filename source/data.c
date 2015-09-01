@@ -43,6 +43,12 @@ int InitData()
 	/*设置动态队列*/
 	SetTaskQueueLength(&data.recvDataList.nCurQueueLen);
 
+	if (CreateDBConnPool() == 0)
+	{
+		ERROR_DESC("InitData", ERR_CRECONNPOOL);
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -56,6 +62,11 @@ int ReleaseData()
 	if (ReleaseThreadPool() == 0)
 	{
 		ERROR_DESC("ReleaseData", ERR_REPOOL);
+	}
+
+	if (ReleaseDBConnPool() == 0)
+	{
+		ERROR_DESC("ReleaseData", ERR_RECONNPOOL);
 	}
 
 	/*遍历队列列表*/
@@ -115,7 +126,26 @@ void *TestData(void *pData)
 	{
 		if(pDataNode->pData)
 		{
-			printf("INFOR-socket:%d data:%s\n", pDataNode->nSocket, (char *)pDataNode->pData);
+//			printf("INFOR-socket:%d data:%s\n", pDataNode->nSocket, (char *)pDataNode->pData);
+			DBConnNode *pDBConnNode = GetFreeDBConn();
+			if (pDBConnNode)
+			{
+				if (ExecuteModify(pDBConnNode->pMySql, "insert into test.message(id, message) values(1, '123')") == 0)
+				{
+					printf("1\n");
+					ReleaseAccessDBConn(pDBConnNode);
+					exit(0);
+				}
+				else
+				{
+					printf("2\n");
+				}
+				ReleaseAccessDBConn(pDBConnNode);
+			}
+			else
+			{
+				printf("没有空闲的连接\n");
+			}
 		}
 
 		ReleaseDataNode(pDataNode);

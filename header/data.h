@@ -14,6 +14,7 @@
 #include "queue.h"
 #include "thread.h"
 #include "threadpool.h"
+#include "dbconnpool.h"
 
 typedef struct DataNode
 {

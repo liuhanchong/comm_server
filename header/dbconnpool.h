@@ -39,6 +39,7 @@ static DBConnPool connPool;
 int CreateDBConnPool();
 int ReleaseDBConnPool();
 DBConnNode *GetFreeDBConn();/*获取一个空闲连接*/
+int ReleaseAccessDBConn(DBConnNode *pDBConnNode);/*释放一个访问连接*/
 void ReleaseDBConnNode(DBConnNode *pNode);/*释放连接池节点*/
 
 /*私有*/

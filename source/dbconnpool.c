@@ -86,6 +86,13 @@ DBConnNode *GetFreeDBConn()
 	return NULL;
 }
 
+int ReleaseAccessDBConn(DBConnNode *pDBConnNode)
+{
+	pDBConnNode->nConnection = 0;//状态为已连接
+	pDBConnNode->tmAccessTime = time(NULL);
+	return 1;
+}
+
 void ReleaseDBConnNode(DBConnNode *pNode)
 {
 	if (pNode)

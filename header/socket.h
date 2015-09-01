@@ -20,7 +20,6 @@
 #include "ini.h"
 #include "data.h"
 #include "aio_x.h"
-#include "dbcore.h"
 
 typedef struct SocketNode
 {

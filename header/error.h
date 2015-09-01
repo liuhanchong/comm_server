@@ -54,6 +54,8 @@
 #define ERR_DBOPEN ("数据库打开失败")
 #define ERR_DBCLOSE ("数据库关闭失败")
 #define ERR_DBAUTOCOMM ("设置数据库自动提交失败")
+#define ERR_CRECONNPOOL ("创建连接池失败") //创建连接池失败
+#define ERR_RECONNPOOL ("销毁连接池失败") //销毁连接池失败
 
 /*相关的错误输出宏定义*/
 #define ERROR_DESC(FUN, DESC) (printf("错误:Fun-%s, 描述-%s!\n", (FUN), (DESC)))
