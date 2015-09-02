@@ -31,6 +31,8 @@ typedef struct DBConnPool
 
 	int nAccOverTime;/*连接未使用时间超时*/
 	int nAccConnLoopSpace;/*连接未使用的判断间隔*/
+
+	int nAddConnNumber;/*每次增加的链接数*/
 } DBConnPool;
 
 static DBConnPool connPool;

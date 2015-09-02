@@ -132,13 +132,13 @@ void *TestData(void *pData)
 			{
 				if (ExecuteModify(pDBConnNode->pMySql, "insert into test.message(id, message) values(1, '123')") == 0)
 				{
-					printf("1\n");
+//					printf("1\n");
 					ReleaseAccessDBConn(pDBConnNode);
 					exit(0);
 				}
 				else
 				{
-					printf("2\n");
+//					printf("2\n");
 				}
 				ReleaseAccessDBConn(pDBConnNode);
 			}

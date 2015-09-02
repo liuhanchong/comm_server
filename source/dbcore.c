@@ -61,7 +61,7 @@ int ExecuteModify(MYSQL *pMySql, char *sSql)
 		return 0;
 	}
 
-	if (mysql_query(pMySql, sSql) != 0)
+	if (mysql_real_query(pMySql, sSql, strlen(sSql)) != 0)
 	{
 		ERROR_DESC("ExecuteModify-1", mysql_error(pMySql));
 		return 0;
@@ -303,5 +303,4 @@ int CloseDB(MYSQL *pMySql)
 	mysql_close(pMySql);
 	return 1;
 }
-
 

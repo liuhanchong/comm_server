@@ -22,6 +22,8 @@ int CreateDBConnPool()
 	connPool.nAccOverTime = GetInt(&ini, "ACCOVERTIME", "AccOverTime", 1700);/*连接未使用时间超时*/
 	connPool.nAccConnLoopSpace = GetInt(&ini, "ACCOVERTIME", "AccConnLoopSpace", 500);/*超时访问连接时候的判断间隔*/
 
+	connPool.nAddConnNumber = GetInt(&ini, "ADDTHREAD", "AddConnNumber", 4);
+
 	ReleaseIni(&ini);
 
 	if (InitQueue(&connPool.dbConnList, connPool.nMaxConnNumber, 0) == 0)
@@ -73,17 +75,32 @@ DBConnNode *GetFreeDBConn()
 	QueueNode *pNode = NULL;
 	void *pData = NULL;
 	DBConnNode *pDBConnNode = NULL;
+
+	LockQueue((&connPool.dbConnList));
+
 	BeginTraveData(&connPool.dbConnList, nIndex, pNode, pData);
 		pDBConnNode = (DBConnNode *)pData;
 		if (pDBConnNode->nConnection == 0)
 		{
 			pDBConnNode->nConnection = 1;//状态为已连接
 			pDBConnNode->tmAccessTime = time(NULL);
-			return pDBConnNode;
+			break;
 		}
+		pDBConnNode = NULL;
 	EndTraveData();
 
-	return NULL;
+	/*当没有空闲连接，创建新的连接*/
+	if (pDBConnNode == NULL)
+	{
+		if (CreateMulDBConn(connPool.nAddConnNumber) == 0)
+		{
+			ERROR_DESC("GetFreeDBConn", ERR_CREPOOL);
+		}
+	}
+
+	UnlockQueue((&connPool.dbConnList));
+
+	return pDBConnNode;
 }
 
 int ReleaseAccessDBConn(DBConnNode *pDBConnNode)

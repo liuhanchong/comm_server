@@ -126,16 +126,21 @@ WorkNode *GetFreeThread()
 	void *pData = NULL;
 	WorkNode *pWorkNode = NULL;
 
+	LockQueue((&queue.workList));
+
 	BeginTraveData(&queue.workList, nIndex, pNode, pData);
 		pWorkNode = (WorkNode *)pData;
 		if (IsResume(pWorkNode->pWorkThread) == 0)
 		{
 			pWorkNode->tmAccessTime = time(NULL);
-			return pWorkNode;
+			break;
 		}
+		pWorkNode = NULL;
 	EndTraveData();
 
-	return NULL;
+	UnlockQueue((&queue.workList));
+
+	return pWorkNode;
 }
 
 void ReleaseThreadNode(WorkNode *pNode)
